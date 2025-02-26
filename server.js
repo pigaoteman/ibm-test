@@ -7,6 +7,22 @@ const app = express();
 const port = 3000;
 app.use(cors());
 
+  // EIP-712 域信息
+  const domain = {
+    name: 'ApproveAccess',
+    version: '1',
+    chainId: 1,  // 假设是以太坊主网
+  };
+
+  // EIP-712 消息类型
+  const types = {
+    Approve: [
+      { name: 'userAddress', type: 'address' },
+      { name: 'action', type: 'string' },
+      { name: 'timestamp', type: 'uint256' },
+    ],
+};
+  
 // 模拟存储数据
 let chatData = {
   0: [
@@ -37,17 +53,11 @@ app.get('/chat/:id', (req, res) => {
 app.post('/memory/approve-access', (req, res) => {
   const { signature, message } = req.body;
   memoryAccessStatus = 'approved';
-
   if (signature&&message) {
-      // 验证签名（这里是一个简单的示例，实际中需要对签名进行完整的验证）
-      const messageHash = ethers.utils.solidityKeccak256(['string'], [message]);
-      const recoveredAddress = ethers.utils.verifyMessage(messageHash, signature);
-      if (recoveredAddress === message.userAddress) {
-        memoryStatus.approved = true;
-        chatMessages.push({ id: 3, role: 'bot', content: 'Access approved!' });
-      } else {
+    const signerAddress = ethers.utils.verifyTypedData(domain, types, message, signature);
+      if (signerAddress.toLowerCase()!== message.userAddress.toLowerCase()) {
         chatData[0].push({ role: 'bot', message: 'Invalid signature.' });
-        return res.status(400).json({ success: false, message: 'Invalid signature',chatData: chatData[0]  });
+        return res.status(400).json({ message: 'Invalid signature',chatData: chatData[0]  });
       }
   }
   // 新生成消息

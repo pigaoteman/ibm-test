@@ -36,7 +36,10 @@
     transform: rotate(360deg);
   }
 }
-
+.b{
+  word-wrap: break-word;  /* 自动换行 */
+  white-space: normal;    /* 确保文本正常换行 */
+}
 .App {
   font-family: 'Arial', sans-serif;
   background-color: #f8f8f8;
